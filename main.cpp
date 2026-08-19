@@ -6,7 +6,6 @@ using namespace std;
 
 int main()
 {
-    // Load Haar Cascade for face detection
     CascadeClassifier faceCascade;
 
     if (!faceCascade.load("haarcascade_frontalface_default.xml"))
@@ -15,7 +14,6 @@ int main()
         return -1;
     }
 
-    // Open webcam
     VideoCapture camera(0);
 
     if (!camera.isOpened())
@@ -31,7 +29,6 @@ int main()
 
     while (true)
     {
-        // Capture frame from webcam
         camera >> frame;
 
         if (frame.empty())
@@ -40,16 +37,12 @@ int main()
             break;
         }
 
-        // Convert frame to grayscale
         cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
 
-        // Improve contrast
         equalizeHist(grayFrame, grayFrame);
 
-        // Store detected faces
         vector<Rect> faces;
 
-        // Detect faces
         faceCascade.detectMultiScale(
             grayFrame,
             faces,
@@ -59,7 +52,6 @@ int main()
             Size(30, 30)
         );
 
-        // Draw rectangle around each detected face
         for (const Rect& face : faces)
         {
             rectangle(
@@ -80,7 +72,6 @@ int main()
             );
         }
 
-        // Display number of detected faces
         putText(
             frame,
             "Faces: " + to_string(faces.size()),
@@ -91,17 +82,14 @@ int main()
             2
         );
 
-        // Show webcam window
         imshow("Face Detection", frame);
 
-        // Press q to exit
         if (waitKey(1) == 'q')
         {
             break;
         }
     }
 
-    // Release webcam and close windows
     camera.release();
     destroyAllWindows();
 

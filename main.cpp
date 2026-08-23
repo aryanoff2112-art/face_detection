@@ -15,6 +15,8 @@ static const string DB_PATH          = "face_db.csv";
 
 static const double COSINE_THRESHOLD = 0.363;
 
+static const double DETECTION_SCALE = 0.5;
+
 struct KnownFace
 {
     string name;
@@ -111,7 +113,10 @@ int runEnroll(const string& name,
 
     Mat frame;
     camera >> frame;
-    detector->setInputSize(frame.size());
+
+    Size smallSize(cvRound(frame.cols * DETECTION_SCALE),
+                    cvRound(frame.rows * DETECTION_SCALE));
+    detector->setInputSize(smallSize);
 
     cout << "Enrolling '" << name << "'." << endl;
     cout << "Press 'c' to capture a sample, 'q' when done." << endl;
@@ -123,8 +128,14 @@ int runEnroll(const string& name,
         camera >> frame;
         if (frame.empty()) break;
 
+        Mat smallFrame;
+        resize(frame, smallFrame, smallSize);
+
         Mat faces;
-        detector->detect(frame, faces);
+        detector->detect(smallFrame, faces);
+
+        if (faces.rows > 0)
+            faces.colRange(0, 14) *= (1.0 / DETECTION_SCALE);
 
         Rect box;
         bool haveFace = faces.rows > 0;
@@ -198,7 +209,9 @@ int runRecognize(const Ptr<FaceDetectorYN>& detector,
     cout << "Press 'q' to quit." << endl;
 
     Mat frame;
-    detector->setInputSize(Size(frameWidth, frameHeight));
+    Size smallSize(cvRound(frameWidth * DETECTION_SCALE),
+                    cvRound(frameHeight * DETECTION_SCALE));
+    detector->setInputSize(smallSize);
 
     int frameCount = 0;
     double fps = 0.0;
@@ -213,8 +226,14 @@ int runRecognize(const Ptr<FaceDetectorYN>& detector,
             break;
         }
 
+        Mat smallFrame;
+        resize(frame, smallFrame, smallSize);
+
         Mat faces;
-        detector->detect(frame, faces);
+        detector->detect(smallFrame, faces);
+
+        if (faces.rows > 0)
+            faces.colRange(0, 14) *= (1.0 / DETECTION_SCALE);
 
         for (int i = 0; i < faces.rows; i++)
         {

@@ -1,13 +1,16 @@
 # Face Detection in C++ Using OpenCV
 
-A basic **Face Detection** project built using **C++ and OpenCV**. The project uses a webcam to detect human faces in real time using OpenCV's Haar Cascade Classifier.
+A real-time **Face Detection** project built using **C++ and OpenCV**. The application uses a webcam to detect human faces using OpenCV's **Haar Cascade Classifier**.
 
 ## 📌 Features
 
 * Real-time face detection using a webcam
 * Uses OpenCV Haar Cascade Classifier
-* Draws a rectangle around detected faces
+* Draws bounding boxes around detected faces
+* Detects multiple faces simultaneously
 * Displays the number of detected faces
+* Displays real-time FPS
+* Displays camera resolution
 * Simple beginner-friendly C++ implementation
 
 ## 🛠️ Technologies Used
@@ -25,12 +28,17 @@ FaceDetection/
 │
 ├── main.cpp
 ├── haarcascade_frontalface_default.xml
-└── CMakeLists.txt
+├── CMakeLists.txt
+├── README.md
+├── .gitignore
+│
+└── screenshots/
+    └── demo.png
 ```
 
 ## ⚙️ How It Works
 
-The program follows these steps:
+The application follows this process:
 
 ```text
 Webcam
@@ -45,21 +53,22 @@ Detect Faces
    ↓
 Draw Bounding Boxes
    ↓
-Display Result
+Display Face Count, FPS and Resolution
 ```
 
 ## 📋 Requirements
 
-Before running the project, install:
+Before running the project, make sure you have installed:
 
-* C++ compiler
+* A C++ compiler
 * CMake
-* CLion or another C++ IDE
 * OpenCV
+* CLion or another C++ IDE
+* A webcam
 
 ## 🔧 OpenCV Setup
 
-Make sure OpenCV is installed and configured with your compiler.
+Make sure OpenCV is installed and configured correctly with your C++ compiler.
 
 The project uses:
 
@@ -73,19 +82,19 @@ If you are using **MinGW/MSYS2**, OpenCV can be installed with:
 pacman -S mingw-w64-ucrt-x86_64-opencv
 ```
 
-Make sure your compiler and OpenCV installation use compatible architectures/toolchains.
+Make sure your compiler and OpenCV installation use compatible architectures and toolchains.
 
 ## 📥 Haar Cascade File
 
-The project requires:
+The project requires the following file:
 
 ```text
 haarcascade_frontalface_default.xml
 ```
 
-This file is provided by OpenCV and is used by the program to detect faces.
+This file is provided by OpenCV and is used to detect faces.
 
-Place the file in the project directory:
+Place it in the project directory:
 
 ```text
 FaceDetection/
@@ -94,17 +103,19 @@ FaceDetection/
 └── CMakeLists.txt
 ```
 
-## ▶️ Running the Project
+## 🏗️ Build and Run
 
-### 1. Clone the repository
+### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/face-detection-cpp.git
+git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
 ```
 
-### 2. Open the project in CLion
+Replace `YOUR-USERNAME` and `YOUR-REPOSITORY` with your GitHub username and repository name.
 
-Open the project folder in CLion.
+### 2. Open the Project
+
+Open the project folder in CLion or your preferred C++ IDE.
 
 ### 3. Configure CMake
 
@@ -113,36 +124,51 @@ Use the following `CMakeLists.txt`:
 ```cmake
 cmake_minimum_required(VERSION 3.20)
 
-project(face_detection)
+project(FaceDetection)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(OpenCV REQUIRED)
 
-add_executable(face_detection main.cpp)
+add_executable(FaceDetection main.cpp)
 
-target_link_libraries(face_detection PRIVATE ${OpenCV_LIBS})
+target_link_libraries(FaceDetection PRIVATE ${OpenCV_LIBS})
 
-target_include_directories(face_detection PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_include_directories(FaceDetection PRIVATE ${OpenCV_INCLUDE_DIRS})
 ```
 
 ### 4. Reload CMake
 
-In CLion, reload the CMake project after modifying `CMakeLists.txt`.
+Reload the CMake project after modifying `CMakeLists.txt`.
 
 ### 5. Build and Run
 
 Build the project and run the executable.
 
-The webcam window should open and begin detecting faces.
+The webcam window should open and begin detecting faces in real time.
 
-Press:
+## 🎮 Controls
+
+| Key | Action               |
+| --- | -------------------- |
+| `q` | Quit the application |
+
+## 📊 Application Output
+
+The application displays real-time information including:
+
+* Number of detected faces
+* Frames Per Second (FPS)
+* Camera resolution
+
+Example:
 
 ```text
-q
+Faces: 1
+FPS: 30
+Resolution: 640x480
 ```
-
-to exit the program.
 
 ## 💻 Example
 
@@ -156,21 +182,25 @@ When a face is detected, the program draws a bounding box around it:
 |       └──────────┘        |
 |                           |
 |       Faces: 1            |
+|       FPS: 30             |
+|       Resolution: 640x480 |
 +---------------------------+
 ```
 
 ## 🧠 Face Detection Method
 
-This project uses the **Haar Cascade Classifier**.
+This project uses OpenCV's **Haar Cascade Classifier**.
 
 The classifier is loaded using:
 
 ```cpp
 CascadeClassifier faceCascade;
 
-faceCascade.load(
-    "haarcascade_frontalface_default.xml"
-);
+if (!faceCascade.load("haarcascade_frontalface_default.xml"))
+{
+    cout << "Error: Could not load Haar Cascade file!" << endl;
+    return -1;
+}
 ```
 
 Faces are detected using:
@@ -182,20 +212,27 @@ faceCascade.detectMultiScale(
     1.1,
     5
 );
+
+```
+
+You can display a screenshot in this README using:
+
+```md
+![Face Detection Demo](screenshots/demo.png)
 ```
 
 ## ⚠️ Troubleshooting
 
 ### `opencv2/opencv.hpp: No such file or directory`
 
-This usually means OpenCV is not configured correctly with your compiler.
+This error usually means OpenCV is not configured correctly with your compiler.
 
 Make sure:
 
 * OpenCV is installed.
-* OpenCV's `include` directory is available to the compiler.
+* OpenCV's include directory is available to the compiler.
 * Your compiler is compatible with the OpenCV build.
-* `find_package(OpenCV REQUIRED)` works in CMake.
+* `find_package(OpenCV REQUIRED)` works correctly in CMake.
 
 ### `Could not load Haar Cascade file`
 
@@ -207,32 +244,40 @@ haarcascade_frontalface_default.xml
 
 is available in the program's working directory.
 
-You can also provide the complete path:
+A relative path is recommended instead of a computer-specific absolute path.
 
-```cpp
-faceCascade.load(
-    "D:/face_detection/haarcascade_frontalface_default.xml"
-);
-```
+### Webcam Does Not Open
 
-## 🚀 Possible Future Improvements
+Make sure:
+
+* Your webcam is connected and enabled.
+* Another application is not using the webcam.
+* Your system allows the application to access the camera.
+
+## 🚀 Future Improvements
+
+Possible improvements include:
 
 * Eye detection
 * Smile detection
 * Multiple face tracking
 * Face recognition
 * Save detected faces as images
-* Real-time FPS counter
 * Automatic face attendance system
 * GUI interface
+* Screenshot capture
+* Video recording
+* Improved performance and accuracy
 
 ## 📄 License
 
-This project is created for educational and learning purposes.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
 ## 👨‍💻 Author
 
 **Aryan**
 
+---
 
 ⭐ If you found this project useful, consider giving the repository a star.
+

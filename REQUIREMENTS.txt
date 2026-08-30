@@ -1,9 +1,0 @@
-C++17 or later
-OpenCV 4.x
-CMake 3.16 or later
-Webcam
-
-Required OpenCV models:
-
-face_detection_yunet_2023mar.onnx
-face_recognition_sface_2021dec.onnx

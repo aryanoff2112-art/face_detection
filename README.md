@@ -1,57 +1,68 @@
-# Face Detection in C++ Using OpenCV
+# Face Detection & Recognition in C++ Using OpenCV
 
-A real-time **Face Detection** project built using **C++ and OpenCV**. The application uses a webcam to detect human faces using OpenCV's **Haar Cascade Classifier**.
+A real-time **face detection and recognition** application built with **C++ and OpenCV**, using OpenCV's DNN-based **YuNet** face detector and **SFace** face recognizer. The app can enroll people from a webcam and then recognize them live, drawing labeled bounding boxes with a match confidence score.
+
+> Note: earlier versions of this README described a Haar Cascade based detector. The project has since moved to OpenCV's YuNet/SFace DNN models, which are faster and significantly more accurate. This README now reflects the current code.
 
 ## 📌 Features
 
-* Real-time face detection using a webcam
-* Uses OpenCV Haar Cascade Classifier
-* Draws bounding boxes around detected faces
-* Detects multiple faces simultaneously
-* Displays the number of detected faces
-* Displays real-time FPS
-* Displays camera resolution
-* Simple beginner-friendly C++ implementation
+- Real-time face detection using OpenCV's **YuNet** DNN detector
+- Face **recognition** against an enrolled database using OpenCV's **SFace** recognizer
+- Enroll new people from the webcam (`enroll <name>`)
+- List and delete enrolled people (`list`, `delete <name>`)
+- Draws labeled bounding boxes (green = recognized, red = unknown) with match confidence
+- Displays face count, real-time FPS, and camera resolution
+- Detects and recognizes multiple faces simultaneously
+- Downscaled detection pass for speed, with boxes rescaled back to full resolution
 
 ## 🛠️ Technologies Used
 
-* **C++**
-* **OpenCV**
-* **Haar Cascade Classifier**
-* **CMake**
-* **CLion / MinGW**
+- **C++17**
+- **OpenCV** (`objdetect`, DNN-based `FaceDetectorYN` and `FaceRecognizerSF`)
+- **CMake**
+- **CLion / MinGW**
 
 ## 📂 Project Structure
 
-```text
+```
 FaceDetection/
 │
-├── main.cpp
-├── haarcascade_frontalface_default.xml
+├── main.cpp                              # CLI parsing / dispatch only
+├── config.h                              # shared constants (model paths, thresholds)
+├── face_db.h / face_db.cpp               # KnownFace struct + CSV load/save/list/delete
+├── matcher.h / matcher.cpp               # MatchResult struct + identify()
+├── util.h / util.cpp                     # clampRect(), openCamera()
+├── enroll.h / enroll.cpp                 # `enroll <name>` command
+├── recognize.h / recognize.cpp           # default live recognition command
+├── face_detection_yunet_2023mar.onnx     (download separately, see below)
+├── face_recognition_sface_2021dec.onnx   (download separately, see below)
+├── face_db.csv                           (created automatically when you enroll)
 ├── CMakeLists.txt
+├── DEPENDENCIES.md
 ├── README.md
-├── .gitignore
-│
-└── screenshots/
-    └── demo.png
+└── .gitignore
 ```
+
+The code is split by responsibility: `config.h` holds shared constants, `face_db` owns all CSV persistence, `matcher` owns the cosine-similarity comparison, `util` holds small shared helpers, and `enroll`/`recognize` each implement one CLI command. `main.cpp` only parses arguments and wires the pieces together.
 
 ## ⚙️ How It Works
 
-The application follows this process:
-
-```text
+```
 Webcam
    ↓
 Capture Video Frame
    ↓
-Convert Frame to Grayscale
+Downscale Frame (for faster detection)
    ↓
-Haar Cascade Face Detection
+YuNet Face Detection
    ↓
-Detect Faces
+Rescale Boxes to Full Resolution
    ↓
-Draw Bounding Boxes
+SFace: Align + Extract Embedding per Face
+   ↓
+Compare Embedding Against Enrolled Database (Cosine Similarity)
+   ↓
+Draw Bounding Boxes + Name + Confidence
    ↓
 Display Face Count, FPS and Resolution
 ```
@@ -60,11 +71,11 @@ Display Face Count, FPS and Resolution
 
 Before running the project, make sure you have installed:
 
-* A C++ compiler
-* CMake
-* OpenCV
-* CLion or another C++ IDE
-* A webcam
+- A C++17 compiler
+- CMake
+- OpenCV (built with the `objdetect` / DNN modules)
+- CLion or another C++ IDE
+- A webcam
 
 ## 🔧 OpenCV Setup
 
@@ -74,32 +85,35 @@ The project uses:
 
 ```cpp
 #include <opencv2/opencv.hpp>
+#include <opencv2/objdetect.hpp>
 ```
 
 If you are using **MinGW/MSYS2**, OpenCV can be installed with:
 
-```bash
+```
 pacman -S mingw-w64-ucrt-x86_64-opencv
 ```
 
 Make sure your compiler and OpenCV installation use compatible architectures and toolchains.
 
-## 📥 Haar Cascade File
+## 📥 Model Files (Required)
 
-The project requires the following file:
+[//]: # (See DEPENDENCIES.md for direct download links.)
 
-```text
-haarcascade_frontalface_default.xml
+This project needs two ONNX model files that are **not included in the repo** (they're binary and fairly large):
+
+```
+face_detection_yunet_2023mar.onnx
+face_recognition_sface_2021dec.onnx
 ```
 
-This file is provided by OpenCV and is used to detect faces.
+See [`DEPENDENCIES.md`](DEPENDENCIES.md) for download links and instructions. Place both files in the project's working directory (same folder as the executable, or wherever you run it from):
 
-Place it in the project directory:
-
-```text
+```
 FaceDetection/
 ├── main.cpp
-├── haarcascade_frontalface_default.xml
+├── face_detection_yunet_2023mar.onnx
+├── face_recognition_sface_2021dec.onnx
 └── CMakeLists.txt
 ```
 
@@ -107,11 +121,9 @@ FaceDetection/
 
 ### 1. Clone the Repository
 
-```bash
-git clone https://github.com/YOUR-USERNAME/YOUR-REPOSITORY.git
 ```
-
-Replace `YOUR-USERNAME` and `YOUR-REPOSITORY` with your GitHub username and repository name.
+git clone https://github.com/aryanoff2112-art/face_detection.git
+```
 
 ### 2. Open the Project
 
@@ -144,82 +156,86 @@ Reload the CMake project after modifying `CMakeLists.txt`.
 
 ### 5. Build and Run
 
-Build the project and run the executable.
+Build the project and run the executable from a directory containing the two `.onnx` model files.
 
-The webcam window should open and begin detecting faces in real time.
+## 🎮 Usage
 
-## 🎮 Controls
+```
+FaceDetection                 Run live recognition against face_db.csv
+FaceDetection enroll <name>   Capture samples for <name> into face_db.csv
+FaceDetection list            List enrolled names and sample counts
+FaceDetection delete <name>   Remove all samples for <name>
+FaceDetection help            Show usage
+```
 
-| Key | Action               |
-| --- | -------------------- |
-| `q` | Quit the application |
+### Enrolling someone
+
+```
+FaceDetection enroll Aryan
+```
+
+A window opens with a live preview. Press `c` to capture a sample whenever a face is detected (capture a few, from slightly different angles, for better accuracy), and `q` when you're done. Samples are appended to `face_db.csv`.
+
+### Recognizing
+
+```
+FaceDetection
+```
+
+Opens the webcam and draws a labeled box around every detected face: green with a name and confidence percentage if it matches someone in `face_db.csv`, red and labeled "Unknown" otherwise.
+
+| Key | Action                          |
+| --- | -------------------------------- |
+| `c` | Capture a sample (enroll mode)   |
+| `q` | Quit / finish                    |
 
 ## 📊 Application Output
 
 The application displays real-time information including:
 
-* Number of detected faces
-* Frames Per Second (FPS)
-* Camera resolution
+- Number of detected faces
+- Frames Per Second (FPS)
+- Camera resolution
+- Per-face name and match confidence
 
 Example:
 
-```text
+```
 Faces: 1
 FPS: 30
 Resolution: 640x480
+Aryan (87%)
 ```
 
-## 💻 Example
+## 🧠 Detection & Recognition Method
 
-When a face is detected, the program draws a bounding box around it:
-
-```text
-+---------------------------+
-|                           |
-|       ┌──────────┐        |
-|       │   FACE   │        |
-|       └──────────┘        |
-|                           |
-|       Faces: 1            |
-|       FPS: 30             |
-|       Resolution: 640x480 |
-+---------------------------+
-```
-
-## 🧠 Face Detection Method
-
-This project uses OpenCV's **Haar Cascade Classifier**.
-
-The classifier is loaded using:
+This project uses OpenCV's DNN-based **YuNet** detector and **SFace** recognizer, loaded via:
 
 ```cpp
-CascadeClassifier faceCascade;
+Ptr<FaceDetectorYN> detector = FaceDetectorYN::create(
+    DETECTOR_MODEL, "", Size(320, 320), 0.9f, 0.3f, 5000);
 
-if (!faceCascade.load("haarcascade_frontalface_default.xml"))
-{
-    cout << "Error: Could not load Haar Cascade file!" << endl;
-    return -1;
-}
+Ptr<FaceRecognizerSF> recognizer = FaceRecognizerSF::create(
+    RECOGNIZER_MODEL, "");
 ```
 
-Faces are detected using:
+Each frame is downscaled before detection for speed, and detected boxes are rescaled back to full resolution:
 
 ```cpp
-faceCascade.detectMultiScale(
-    grayFrame,
-    faces,
-    1.1,
-    5
-);
-
+detector->detect(smallFrame, faces);
+if (faces.rows > 0)
+    faces.colRange(0, 14) *= (1.0 / DETECTION_SCALE);
 ```
 
-You can display a screenshot in this README using:
+Each detected face is aligned and turned into a 128-d embedding, then compared against every enrolled embedding using cosine similarity; matches above `COSINE_THRESHOLD` (0.363, OpenCV's documented SFace threshold) are labeled with the closest name.
 
-```md
-![Face Detection Demo](screenshots/demo.png)
-```
+## ⚡ Performance Notes
+
+- Detection runs on a downscaled frame (`DETECTION_SCALE = 0.5`) to keep FPS up; lower this further for more speed at the cost of missing small/distant faces.
+- Frame buffers (`Mat` objects) are reused across the capture loop instead of being reallocated every frame.
+- The webcam capture buffer is set to 1 frame where the backend supports it, to reduce latency.
+- If your OpenCV build includes CUDA or OpenVINO, set `detector`/`recognizer` to use `DNN_BACKEND_CUDA`/`DNN_TARGET_CUDA` (or the OpenVINO equivalents) for a large FPS improvement — see the comment in `main()`.
+- Recognition (embedding + comparison) is the expensive step, not detection — if you expect many enrolled people, consider only re-running recognition every N frames and tracking boxes in between.
 
 ## ⚠️ Troubleshooting
 
@@ -229,45 +245,34 @@ This error usually means OpenCV is not configured correctly with your compiler.
 
 Make sure:
 
-* OpenCV is installed.
-* OpenCV's include directory is available to the compiler.
-* Your compiler is compatible with the OpenCV build.
-* `find_package(OpenCV REQUIRED)` works correctly in CMake.
+- OpenCV is installed.
+- OpenCV's include directory is available to the compiler.
+- Your compiler is compatible with the OpenCV build.
+- `find_package(OpenCV REQUIRED)` works correctly in CMake.
 
-### `Could not load Haar Cascade file`
+### `Error: Could not load face detector/recognizer model`
 
-Make sure:
-
-```text
-haarcascade_frontalface_default.xml
-```
-
-is available in the program's working directory.
-
-A relative path is recommended instead of a computer-specific absolute path.
+Make sure both `.onnx` files are present in the program's working directory (a relative path is recommended over a computer-specific absolute path). See [`DEPENDENCIES.md`](DEPENDENCIES.md).
 
 ### Webcam Does Not Open
 
 Make sure:
 
-* Your webcam is connected and enabled.
-* Another application is not using the webcam.
-* Your system allows the application to access the camera.
+- Your webcam is connected and enabled.
+- Another application is not using the webcam.
+- Your system allows the application to access the camera.
+
+### Program crashes near frame edges / after enrolling
+
+This used to happen when a detected face box extended slightly past the frame boundary. Boxes are now clamped to the frame (`clampRect`) before use — if you still see a crash, please open an issue with the exact steps to reproduce.
 
 ## 🚀 Future Improvements
 
-Possible improvements include:
-
-* Eye detection
-* Smile detection
-* Multiple face tracking
-* Face recognition
-* Save detected faces as images
-* Automatic face attendance system
-* GUI interface
-* Screenshot capture
-* Video recording
-* Improved performance and accuracy
+- GUI interface instead of raw OpenCV windows
+- Automatic face-attendance logging (timestamped CSV/DB of recognitions)
+- Screenshot capture / video recording of sessions
+- Batch import of enrollment photos instead of only live capture
+- Optional GPU (CUDA/OpenVINO) backend toggle via a CLI flag
 
 ## 📄 License
 

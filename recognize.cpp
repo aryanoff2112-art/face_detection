@@ -1,5 +1,6 @@
 #include "recognize.h"
 
+#include <opencv2/opencv.hpp>
 #include <iostream>
 
 #include "config.h"
@@ -20,7 +21,8 @@ int runRecognize(const Ptr<FaceDetectorYN>& detector,
         cout << "Warning: database is empty. Run with 'enroll <name>' first." << endl;
 
     VideoCapture camera;
-    if (!openCamera(camera)){
+    if (!openCamera(camera))
+    {
         cout << "Error: Could not open webcam!" << endl;
         return -1;
     }
@@ -41,9 +43,11 @@ int runRecognize(const Ptr<FaceDetectorYN>& detector,
     double fps = 0.0;
     double startTime = (double)getTickCount();
 
-    while (true){
+    while (true)
+    {
         camera >> frame;
-        if (frame.empty()){
+        if (frame.empty())
+        {
             cout << "Error: Empty frame!" << endl;
             break;
         }
@@ -53,7 +57,8 @@ int runRecognize(const Ptr<FaceDetectorYN>& detector,
         if (faces.rows > 0)
             faces.colRange(0, 14) *= (1.0 / config::DETECTION_SCALE);
 
-        for (int i = 0; i < faces.rows; i++){
+        for (int i = 0; i < faces.rows; i++)
+        {
             Rect box = clampRect(
                 Rect((int)faces.at<float>(i, 0), (int)faces.at<float>(i, 1),
                      (int)faces.at<float>(i, 2), (int)faces.at<float>(i, 3)),
@@ -75,7 +80,8 @@ int runRecognize(const Ptr<FaceDetectorYN>& detector,
 
         frameCount++;
         double elapsedTime = ((double)getTickCount() - startTime) / getTickFrequency();
-        if (elapsedTime >= 1.0){
+        if (elapsedTime >= 1.0)
+        {
             fps = frameCount / elapsedTime;
             frameCount = 0;
             startTime = (double)getTickCount();

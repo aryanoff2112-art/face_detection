@@ -1,5 +1,6 @@
 #include "enroll.h"
 
+#include <opencv2/opencv.hpp>
 #include <iostream>
 
 #include "config.h"
@@ -14,14 +15,16 @@ int runEnroll(const string& name,
               const Ptr<FaceRecognizerSF>& recognizer)
 {
     VideoCapture camera;
-    if (!openCamera(camera)){
+    if (!openCamera(camera))
+    {
         cout << "Error: Could not open webcam!" << endl;
         return -1;
     }
 
     Mat frame;
     camera >> frame;
-    if (frame.empty()){
+    if (frame.empty())
+    {
         cout << "Error: Could not read from webcam!" << endl;
         return -1;
     }
@@ -36,7 +39,8 @@ int runEnroll(const string& name,
     Mat smallFrame, faces, aligned, embedding;
     int samples = 0;
 
-    while (true){
+    while (true)
+    {
         camera >> frame;
         if (frame.empty()) break;
 
@@ -47,7 +51,8 @@ int runEnroll(const string& name,
 
         Rect box;
         bool haveFace = faces.rows > 0;
-        if (haveFace){
+        if (haveFace)
+        {
             box = clampRect(
                 Rect((int)faces.at<float>(0, 0), (int)faces.at<float>(0, 1),
                      (int)faces.at<float>(0, 2), (int)faces.at<float>(0, 3)),
@@ -63,7 +68,8 @@ int runEnroll(const string& name,
         imshow("Enroll", frame);
         int key = waitKey(1);
 
-        if (key == 'c' && haveFace){
+        if (key == 'c' && haveFace)
+        {
             recognizer->alignCrop(frame, faces.row(0), aligned);
             recognizer->feature(aligned, embedding);
 
@@ -74,7 +80,8 @@ int runEnroll(const string& name,
             samples++;
             cout << "Captured sample " << samples << " for " << name << endl;
         }
-        else if (key == 'q'){
+        else if (key == 'q')
+        {
             break;
         }
     }

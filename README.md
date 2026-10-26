@@ -2,7 +2,7 @@
 
 ![Build](https://github.com/aryanoff2112-art/face_detection/actions/workflows/build.yml/badge.svg)
 
-A real-time **face detection and recognition** application built with **C++ and OpenCV**, using OpenCV's DNN-based **YuNet** face detector and **SFace** face recognizer. The app can enroll people from a webcam and then recognize them live, drawing labeled bounding boxes with a match confidence score.
+A real-time **face detection and recognition** application built with **C++ and OpenCV**, using OpenCV's DNN-based **YuNet** face detection and **SFace** face recognition. The app can enroll people from a webcam and then recognize them live, drawing labeled bounding boxes with a match confidence score.
 
 > Note: earlier versions of this README described a Haar Cascade based detector. The project has since moved to OpenCV's YuNet/SFace DNN models, which are faster and significantly more accurate and efficient. This README now reflects the current code.
 

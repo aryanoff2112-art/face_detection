@@ -73,7 +73,7 @@ Display Face Count, FPS and Resolution
 
 Before running the project, make sure you have installed:
 
-- A C++17 compiler
+- A C++ 17 compiler
 - CMake
 - OpenCV (built with the `objdetect` / DNN modules)
 - CLion or another C++ IDE
